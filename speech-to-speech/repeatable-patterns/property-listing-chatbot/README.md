@@ -1,96 +1,26 @@
 # Property Listing Chatbot
 
-This sample application demonstrates how to combine Amazon Nova core models with
-Nova Sonic to build a multimodal property listing assistant. The chatbot accepts
-both typed and spoken questions, retrieves relevant property listings, and
-responds with text and optional speech.
+This sample demonstrates how to combine Amazon Nova core models with Nova Sonic to build a multimodal real-estate assistant. The chatbot answers typed or spoken questions about sample property listings.
+
+The project is split into two parts:
+
+- **backend/** – FastAPI service and command-line tools. See `backend/README.md` for setup and API instructions.
+- **frontend/** – Static browser client. See `frontend/README.md` for usage.
 
 ## Architecture
 
-1. **Central Orchestrator** – `PropertyChatbot` routes text or audio input,
-   maintains a session ID, and coordinates other components.
-2. **Retrieval Layer** – `PropertyRetriever` loads a small JSON file of sample
-   property listings and performs naive keyword search.
-3. **Core Nova Model** – `LLMClient` calls a text-based Nova model (default:
-   `amazon.nova-lite-v1:0`) to reason over retrieved listings and craft answers.
-4. **Nova Sonic** – `SonicClient` optionally converts speech to text and text to
-   speech so the assistant can handle voice interactions.
-
-## Usage
-
-Install dependencies and configure AWS credentials for Bedrock.
-
-```bash
-python -m pip install -r requirements.txt
-export AWS_ACCESS_KEY_ID=...
-export AWS_SECRET_ACCESS_KEY=...
-export AWS_DEFAULT_REGION=us-east-1
-```
-
-### Text query
-
-```bash
-python property_chatbot.py --text "3 bedroom house in Seattle"
-```
-
-### Voice query
-
-Provide a WAV file containing the user's spoken question.
-
-```bash
-python property_chatbot.py --audio question.wav
-```
-
-The script will print the transcript and text answer. A PCM file named
-`response_audio.pcm` is written containing the synthesized speech from the
-assistant.
-
-
-<<<<<<< wvonyb-codex/create-static-folder-for-chatbot-frontend
-
-### Web frontend
-
-A minimal browser-based interface lives under `static/`.
-
-1. Ensure a backend exposing `/chat` and `/voice` endpoints is running.
-2. Serve the static files, for example:
-
-```bash
-cd static
-python -m http.server 8000
-```
-
-3. Open `http://localhost:8000` in a browser. Use the textarea to send text,
-   press the microphone button to record a question, and the audio player will
-   play responses.
-=======
-### Run web server
-
-Expose the chatbot through a REST API with FastAPI.
-
-```bash
-uvicorn web_app:app --reload
-```
-
-Send a text question:
-
-```bash
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"text": "3 bedroom house in Seattle"}'
-```
-
-Send a voice question:
-
-```bash
-curl -X POST http://localhost:8000/voice -F "file=@question.wav"
-```
-
-The `/voice` endpoint returns a transcript, text answer, and base64-encoded PCM audio.
->>>>>>> main
+1. **Central Orchestrator** – `PropertyChatbot` routes text or audio input and coordinates other components.
+2. **Retrieval Layer** – `PropertyRetriever` loads a JSON file of sample listings and performs naive keyword search.
+3. **Core Nova Model** – `LLMClient` calls a text-based Nova model to reason over retrieved listings and craft answers.
+4. **Nova Sonic** – `SonicClient` converts speech to text and text to speech so the assistant can handle voice interactions.
 
 ## Notes
 
-This example focuses on illustrating how components fit together. Production
-applications should implement robust error handling, streaming audio for low
-latency, and secure storage of user data.
+This example focuses on illustrating how components fit together. Production applications should implement robust error handling, streaming audio for low latency, and secure storage of user data.
+
+## Deployment
+
+`backend/README.md` describes how to containerize and run the API on scalable AWS
+infrastructure, while `frontend/README.md` shows how to host the static site on
+S3 and CloudFront. Deploying both pieces separately allows the application to
+serve multiple users concurrently.

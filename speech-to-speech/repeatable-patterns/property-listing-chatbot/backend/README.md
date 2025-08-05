@@ -1,0 +1,59 @@
+# Property Listing Chatbot Backend
+
+This directory hosts the FastAPI service and supporting modules for the property listing assistant.
+
+## Setup
+
+1. Install dependencies and configure AWS credentials for Bedrock:
+   ```bash
+   python -m pip install -r requirements.txt
+   export AWS_ACCESS_KEY_ID=...
+   export AWS_SECRET_ACCESS_KEY=...
+   export AWS_DEFAULT_REGION=us-east-1
+   ```
+
+## Command line
+
+Run the orchestrator directly:
+```bash
+python property_chatbot.py --text "3 bedroom house in Seattle"
+python property_chatbot.py --audio question.wav
+```
+The audio command prints the transcript and answer and writes `response_audio.pcm`.
+
+## REST API
+
+Start the FastAPI server:
+```bash
+uvicorn web_app:app --reload
+```
+
+Send sample requests:
+```bash
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"text": "3 bedroom house in Seattle"}'
+
+curl -X POST http://localhost:8000/voice -F "file=@question.wav"
+```
+The `/voice` endpoint returns a transcript, text answer, and base64 encoded audio response.
+
+## Deploying on AWS
+
+This service is containerized to make deployment straightforward. A sample
+`Dockerfile` is included.
+
+1. **Build and push the image**
+   ```bash
+   docker build -t property-chatbot-backend .
+   aws ecr create-repository --repository-name property-chatbot-backend --region us-east-1
+   aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-east-1.amazonaws.com
+   docker tag property-chatbot-backend:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/property-chatbot-backend:latest
+   docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/property-chatbot-backend:latest
+   ```
+2. **Run on ECS Fargate or App Runner** – Create a service pointing to the ECR
+   image. Configure the container to listen on port `80`.
+3. **Expose via load balancer** – Front the service with an Application Load
+   Balancer or API Gateway so the frontend can reach it.
+
+ECS and App Runner automatically scale to handle multiple concurrent users.

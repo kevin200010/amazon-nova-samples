@@ -1,19 +1,30 @@
+const API_URL = 'http://localhost:8000';
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('send');
 const micBtn = document.getElementById('mic');
-const responseDiv = document.getElementById('response');
+const messages = document.getElementById('messages');
 const audioEl = document.getElementById('audio');
+
+function addMessage(text, cls) {
+  const div = document.createElement('div');
+  div.className = `msg ${cls}`;
+  div.textContent = text;
+  messages.appendChild(div);
+  messages.scrollTop = messages.scrollHeight;
+}
 
 sendBtn.onclick = async () => {
   const text = chatInput.value.trim();
   if (!text) return;
-  const res = await fetch('/chat', {
+  addMessage(text, 'user');
+  chatInput.value = '';
+  const res = await fetch(`${API_URL}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text })
   });
   const data = await res.json();
-  responseDiv.textContent = data.answer || '';
+  if (data.answer) addMessage(data.answer, 'bot');
   if (data.audio) {
     audioEl.src = `data:audio/wav;base64,${data.audio}`;
     audioEl.play();
@@ -31,16 +42,14 @@ micBtn.onclick = async () => {
     mediaRecorder.onstop = async () => {
       const blob = new Blob(audioChunks, { type: 'audio/webm' });
       audioChunks = [];
-      const res = await fetch('/voice', {
+      const res = await fetch(`${API_URL}/voice`, {
         method: 'POST',
         headers: { 'Content-Type': 'audio/webm' },
         body: blob
       });
       const data = await res.json();
-      let text = '';
-      if (data.transcript) text += `You: ${data.transcript}\n`;
-      if (data.answer) text += `Bot: ${data.answer}`;
-      responseDiv.textContent = text;
+      if (data.transcript) addMessage(data.transcript, 'user');
+      if (data.answer) addMessage(data.answer, 'bot');
       if (data.audio) {
         audioEl.src = `data:audio/wav;base64,${data.audio}`;
         audioEl.play();
