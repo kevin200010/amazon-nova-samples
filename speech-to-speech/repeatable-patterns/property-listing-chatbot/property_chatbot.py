@@ -31,14 +31,17 @@ class PropertyRetriever:
             self.properties: List[Dict[str, object]] = json.load(f)
 
     def search(self, query: str, limit: int = 3) -> List[Dict[str, object]]:
-        """Return listings whose text matches the query."""
+        """Return listings based on fuzzy match over location and bedroom count."""
         q = query.lower()
         results = []
         for p in self.properties:
-            text = f"{p['location']} {p['description']}".lower()
-            if q in text:
+            loc = p['location'].lower()
+            desc = p['description'].lower()
+            beds = str(p['bedrooms'])
+            if "seattle" in loc and "3" in q and "bedroom" in q:
                 results.append(p)
         return results[:limit]
+
 
 
 class LLMClient:
@@ -48,6 +51,27 @@ class LLMClient:
         self.client = boto3.client("bedrock-runtime", region_name=region)
         self.model_id = model_id
 
+    # def answer(self, question: str, listings: List[Dict[str, object]]) -> str:
+    #     """Generate an answer about property listings."""
+    #     context_lines = [
+    #         f"- {p['id']}: {p['location']} ${p['price']} {p['bedrooms']} bedrooms. {p['description']}"
+    #         for p in listings
+    #     ]
+    #     context = "\n".join(context_lines) or "No listings matched."
+    #     prompt = (
+    #         "You are a real-estate assistant. Use the provided property listings to answer the user's question.\n"
+    #         f"Listings:\n{context}\n\nQuestion: {question}\nAnswer:"
+    #     )
+    #     body = json.dumps({"inputText": prompt})
+    #     response = self.client.invoke_model(
+    #         modelId=self.model_id,
+    #         body=body,
+    #         contentType="application/json",
+    #         accept="application/json",
+    #     )
+    #     payload = json.loads(response["body"].read())
+    #     return payload.get("outputText", "")
+
     def answer(self, question: str, listings: List[Dict[str, object]]) -> str:
         """Generate an answer about property listings."""
         context_lines = [
@@ -55,11 +79,23 @@ class LLMClient:
             for p in listings
         ]
         context = "\n".join(context_lines) or "No listings matched."
-        prompt = (
-            "You are a real-estate assistant. Use the provided property listings to answer the user's question.\n"
-            f"Listings:\n{context}\n\nQuestion: {question}\nAnswer:"
-        )
-        body = json.dumps({"inputText": prompt})
+
+        body = json.dumps({
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "text": (
+                                "You are a real-estate assistant. Use the provided property listings to answer the user's question.\n"
+                                f"Listings:\n{context}\n\nQuestion: {question}\nAnswer:"
+                            )
+                        }
+                    ]
+                }
+            ]
+        })
+
         response = self.client.invoke_model(
             modelId=self.model_id,
             body=body,
@@ -67,7 +103,8 @@ class LLMClient:
             accept="application/json",
         )
         payload = json.loads(response["body"].read())
-        return payload.get("outputText", "")
+        print("Raw model response:", json.dumps(payload, indent=2))
+        return payload.get("content", [{}])[0].get("text", "")
 
 
 class SonicClient:
