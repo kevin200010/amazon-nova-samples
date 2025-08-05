@@ -45,29 +45,7 @@ The script will print the transcript and text answer. A PCM file named
 `response_audio.pcm` is written containing the synthesized speech from the
 assistant.
 
-### Run web server
 
-Expose the chatbot through a REST API with FastAPI.
-
-```bash
-uvicorn web_app:app --reload
-```
-
-Send a text question:
-
-```bash
-curl -X POST http://localhost:8000/chat \
-  -H "Content-Type: application/json" \
-  -d '{"text": "3 bedroom house in Seattle"}'
-```
-
-Send a voice question:
-
-```bash
-curl -X POST http://localhost:8000/voice -F "file=@question.wav"
-```
-
-The `/voice` endpoint returns a transcript, text answer, and base64-encoded PCM audio.
 
 ## Notes
 
