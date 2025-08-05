@@ -1,3 +1,4 @@
+const API_URL = 'http://localhost:8000';
 const chatInput = document.getElementById('chatInput');
 const sendBtn = document.getElementById('send');
 const micBtn = document.getElementById('mic');
@@ -7,7 +8,7 @@ const audioEl = document.getElementById('audio');
 sendBtn.onclick = async () => {
   const text = chatInput.value.trim();
   if (!text) return;
-  const res = await fetch('/chat', {
+  const res = await fetch(`${API_URL}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ text })
@@ -31,7 +32,7 @@ micBtn.onclick = async () => {
     mediaRecorder.onstop = async () => {
       const blob = new Blob(audioChunks, { type: 'audio/webm' });
       audioChunks = [];
-      const res = await fetch('/voice', {
+      const res = await fetch(`${API_URL}/voice`, {
         method: 'POST',
         headers: { 'Content-Type': 'audio/webm' },
         body: blob
