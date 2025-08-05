@@ -46,21 +46,6 @@ The script will print the transcript and text answer. A PCM file named
 assistant.
 
 
-### Web frontend
-
-A minimal browser-based interface lives under `static/`.
-
-1. Ensure a backend exposing `/chat` and `/voice` endpoints is running.
-2. Serve the static files, for example:
-
-```bash
-cd static
-python -m http.server 8000
-```
-
-3. Open `http://localhost:8000` in a browser. Use the textarea to send text,
-   press the microphone button to record a question, and the audio player will
-   play responses.
 
 ## Notes
 
