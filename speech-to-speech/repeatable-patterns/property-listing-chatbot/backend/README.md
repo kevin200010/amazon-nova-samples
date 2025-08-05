@@ -11,6 +11,12 @@ This directory hosts the FastAPI service and supporting modules for the property
    export AWS_SECRET_ACCESS_KEY=...
    export AWS_DEFAULT_REGION=us-east-1
    ```
+   On Windows PowerShell use:
+   ```powershell
+   setx AWS_ACCESS_KEY_ID "..."
+   setx AWS_SECRET_ACCESS_KEY "..."
+   setx AWS_DEFAULT_REGION "us-east-1"
+   ```
 
 ## Command line
 

@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import List, Dict, Optional
 
 import boto3
+from botocore.exceptions import NoCredentialsError
 
 
 class PropertyRetriever:
@@ -60,12 +61,18 @@ class LLMClient:
             f"Listings:\n{context}\n\nQuestion: {question}\nAnswer:"
         )
         body = json.dumps({"inputText": prompt})
-        response = self.client.invoke_model(
-            modelId=self.model_id,
-            body=body,
-            contentType="application/json",
-            accept="application/json",
-        )
+        try:
+            response = self.client.invoke_model(
+                modelId=self.model_id,
+                body=body,
+                contentType="application/json",
+                accept="application/json",
+            )
+        except NoCredentialsError:
+            return (
+                "AWS credentials not found. Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY "
+                "to enable Bedrock access."
+            )
         payload = json.loads(response["body"].read())
         return payload.get("outputText", "")
 
@@ -79,12 +86,17 @@ class SonicClient:
 
     def transcribe(self, audio_bytes: bytes) -> str:
         """Convert audio bytes (wav/pcm16) to text."""
-        response = self.client.invoke_model(
-            modelId=self.model_id,
-            body=audio_bytes,
-            contentType="audio/wav",
-            accept="application/json",
-        )
+        try:
+            response = self.client.invoke_model(
+                modelId=self.model_id,
+                body=audio_bytes,
+                contentType="audio/wav",
+                accept="application/json",
+            )
+        except NoCredentialsError as exc:
+            raise RuntimeError(
+                "AWS credentials not found. Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+            ) from exc
         payload = json.loads(response["body"].read())
         return payload.get("text", "")
 
@@ -96,12 +108,17 @@ class SonicClient:
                 "audioFormat": {"codec": "pcm", "sampleRateHertz": 24000},
             }
         )
-        response = self.client.invoke_model(
-            modelId=self.model_id,
-            body=body,
-            contentType="application/json",
-            accept="audio/pcm",
-        )
+        try:
+            response = self.client.invoke_model(
+                modelId=self.model_id,
+                body=body,
+                contentType="application/json",
+                accept="audio/pcm",
+            )
+        except NoCredentialsError as exc:
+            raise RuntimeError(
+                "AWS credentials not found. Set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+            ) from exc
         return response["body"].read()
 
 
