@@ -4,6 +4,7 @@ import base64
 from pathlib import Path
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from property_chatbot import (
@@ -15,6 +16,18 @@ from property_chatbot import (
 
 
 app = FastAPI()
+
+# Allow cross-origin requests from any domain so that the frontend can
+# communicate with this backend without being blocked by the browser's
+# same-origin policy. This enables the automatic preflight `OPTIONS` request
+# that browsers send before certain POST requests to be handled correctly.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Instantiate core components once at startup
 _data_path = Path(__file__).with_name("properties.json")
