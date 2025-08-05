@@ -46,6 +46,48 @@ The script will print the transcript and text answer. A PCM file named
 assistant.
 
 
+<<<<<<< wvonyb-codex/create-static-folder-for-chatbot-frontend
+
+### Web frontend
+
+A minimal browser-based interface lives under `static/`.
+
+1. Ensure a backend exposing `/chat` and `/voice` endpoints is running.
+2. Serve the static files, for example:
+
+```bash
+cd static
+python -m http.server 8000
+```
+
+3. Open `http://localhost:8000` in a browser. Use the textarea to send text,
+   press the microphone button to record a question, and the audio player will
+   play responses.
+=======
+### Run web server
+
+Expose the chatbot through a REST API with FastAPI.
+
+```bash
+uvicorn web_app:app --reload
+```
+
+Send a text question:
+
+```bash
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"text": "3 bedroom house in Seattle"}'
+```
+
+Send a voice question:
+
+```bash
+curl -X POST http://localhost:8000/voice -F "file=@question.wav"
+```
+
+The `/voice` endpoint returns a transcript, text answer, and base64-encoded PCM audio.
+>>>>>>> main
 
 ## Notes
 
